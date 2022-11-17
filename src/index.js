@@ -75,7 +75,6 @@ class imageSearcher {
   }
 
   onReject({ response, message }) {
-    console.log(response);
     if (response.status === 400) {
       this.stopSearch();
     }
