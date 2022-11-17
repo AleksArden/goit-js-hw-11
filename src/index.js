@@ -33,7 +33,7 @@ class imageSearcher {
     this.searchName = e.target.elements.searchQuery.value;
 
     if (this.searchName === '') {
-      this.gallery.innerHTML = '';
+      this.onResetMarkup();
       Notiflix.Notify.info("Please, fill in the search field!");
       return;
     }
