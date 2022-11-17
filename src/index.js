@@ -3,7 +3,8 @@ import Notiflix from 'notiflix';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
-let lightbox = new SimpleLightbox('.gallery a');
+let lightbox = new SimpleLightbox('.gallery a', { fadeSpeed: 500 });
+Notiflix.Notify.init({ width: "400px", fontSize: "20px", cssAnimationStyl: "zoom", position: "center-center" });
 
 class imageSearcher {
   constructor({ form, btnLoadMore, gallery }, URI) {
@@ -14,52 +15,56 @@ class imageSearcher {
     this.searchName = '';
     this.pageCounter = 1;
   }
+
   init() {
     this.addListeners();
   }
+
   addListeners() {
     this.form.addEventListener('submit', this.onSubmit.bind(this));
     this.btnLoadMore.addEventListener('click', () => {
       this.onSearchImage(this.searchName.trim());
     });
   }
+
   onSubmit(e) {
     e.preventDefault();
-    this.pageCounter = 1;
-    this.btnLoadMore.style.display = 'none';
+
     this.searchName = e.target.elements.searchQuery.value;
 
     if (this.searchName === '') {
       this.gallery.innerHTML = '';
+      Notiflix.Notify.info("Please, fill in the search field!");
       return;
     }
-    this.gallery.innerHTML = '';
+    this.onResetMarkup();
 
     this.onSearchImage(this.searchName.trim());
   }
+
   async fetchImages(name) {
     const query = `&q=${name}`;
     const URI = this.URI + this.pageCounter + query;
-    console.log(URI);
+
     const response = await axios.get(URI);
-    console.log(response.data);
     return response.data;
   }
+
   onSearchImage(searchName) {
     this.fetchImages(searchName)
       .then(this.onResolve.bind(this))
       .catch(this.onReject.bind(this));
   }
+
   onResolve({ total, hits, totalHits }) {
     if (total === 0) {
       Notiflix.Notify.failure(
-        'Sorry, there are no images matching your search query. Please try again.'
-      );
+        'Sorry, there are no images matching your search query. Please try again.');
       return;
     }
 
     const imageCounter = this.pageCounter * 40 - 40;
-    console.log(imageCounter);
+
     if (totalHits - imageCounter > 0) {
       this.getImages(hits);
 
@@ -68,8 +73,9 @@ class imageSearcher {
     }
     this.stopSearch();
   }
-  onReject({ response, message }) {
 
+  onReject({ response, message }) {
+    console.log(response);
     if (response.status === 400) {
       this.stopSearch();
     }
@@ -86,14 +92,16 @@ class imageSearcher {
 
     lightbox.refresh();
   }
+
   makeImagesMarkup(data) {
     const markup = data
       .map(item => {
         return this.createElement(item);
       })
       .join('');
-    return this.gallery.insertAdjacentHTML('beforeend', markup);
+    return this.gallery.insertAdjacentHTML("beforeend", markup);
   }
+
   createElement(item) {
     const {
       largeImageURL,
@@ -117,11 +125,20 @@ class imageSearcher {
   </div>
   </div>`;
   }
+
   stopSearch() {
     Notiflix.Notify.failure(
-      "We're sorry, but you've reached the end of search results."
+      "We're sorry, but you've reached the end of search results.", { position: "center-bottom" }
     );
     this.btnLoadMore.style.display = 'none';
+    this.gallery.style.marginBottom = 160 + 'px';
+  }
+
+  onResetMarkup() {
+    this.pageCounter = 1;
+    this.btnLoadMore.style.display = 'none';
+    this.gallery.style.marginBottom = 0 + 'px';
+    this.gallery.innerHTML = '';
   }
 
   onPageScrolling() {
@@ -134,7 +151,6 @@ class imageSearcher {
       behavior: 'smooth',
     });
   }
-
 }
 
 const APIkey = '31274725-b360bae12e89bdbfdfe087168';
